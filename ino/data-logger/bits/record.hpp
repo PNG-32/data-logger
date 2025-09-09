@@ -4,7 +4,7 @@
 #include "types.hpp"
 
 namespace Bits {
-	enum class CacheType {
+	enum class CacheType: uint8 {
 		BCT_NO_CACHE,
 		BCT_CACHE_SAVE_ON_SET,
 		BCT_CACHE_MANUAL_SAVE,
@@ -88,9 +88,7 @@ namespace Bits {
 			val = v;
 		}
 
-		void save() {
-			EEPROM.put(memaddr, val);
-		}
+		void save() {EEPROM.put(memaddr, val);}
 
 		inline operator T() const				{return get();		}
 		inline Record& operator=(T const& val)	{return set(val);	}
@@ -121,9 +119,7 @@ namespace Bits {
 			val = v;
 		}
 
-		void save() {
-			EEPROM.put(memaddr, val);
-		}
+		void save() {EEPROM.put(memaddr, val);}
 
 		inline operator T() const				{return get();		}
 		inline Record& operator=(T const& val)	{return set(val);	}
