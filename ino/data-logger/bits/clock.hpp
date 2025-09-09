@@ -9,7 +9,8 @@
 namespace Bits {
 	struct Clock {
 		struct Info {
-			int8 timeZone = 0;
+			int8 adjusted: 1;
+			int8 timeZone: 7;
 		};
 
 		Clock(uint8 const pin, uint16 const info):
@@ -37,7 +38,18 @@ namespace Bits {
 
 		void adjust(DateTime const& dt) {
 			rtc.adjust(dt);
+			if (!info.get().adjusted) {
+				Info i = info;
+				i.adjusted = true;
+				info = i;
+			}
 		}
+
+		bool adjusted() const {
+			return info.get().adjusted;
+		}
+
+		uint16 address() const {return info.address();}
 
 	private:
 		int32 timeZoneOffset() const {

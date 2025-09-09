@@ -8,10 +8,10 @@
 
 namespace Bits {
 	struct Sensor {
-		enum class Unit: uint8 {
-			BSU_KELVIN,
-			BSU_CELSIUS,
-			BSU_FARENHEIT,
+		enum class Unit: char {
+			BSU_CELSIUS		= 'C',
+			BSU_FARENHEIT	= 'F',
+			BSU_KELVIN		= 'K',
 		};
 
 		struct Value {
@@ -20,7 +20,7 @@ namespace Bits {
 		};
 
 		struct Info {
-			Unit unit = Unit::BSU_KELVIN;
+			Unit unit = Unit::BSU_CELSIUS;
 		};
 
 		Sensor(uint8 const pin, uint16 const info):
@@ -28,26 +28,22 @@ namespace Bits {
 		}
 
 		Value read() const {
-			float 
-				t = dht.readTemperature()	* 100,
-				h = dht.readHumidity()		* 100
-			;
-			Value v{t, h};
+			float const t = dht.readTemperature() * 100;
+			Value v{t, dht.readHumidity() * 100};
 			switch (info.get().unit) {
-				default: break;
-				case Unit::BSU_KELVIN:		v.temperature -= 27315;					break;
-				case Unit::BSU_CELSIUS:												break;
+				default:
+				case Unit::BSU_CELSIUS: break;
 				case Unit::BSU_FARENHEIT:	v.temperature = (t * 1.8 + 32.0) * 100;	break;
+				case Unit::BSU_KELVIN:		v.temperature -= 27315;					break;
 			}
 			return v;
 		}
 
 		Value readRaw() const {
-			float 
-				t = dht.readTemperature()	* 100,
-				h = dht.readHumidity()		* 100
-			;
-			return Value{t, h};
+			return Value{
+				dht.readTemperature()	* 100,
+				dht.readHumidity()		* 100
+			};
 		}
 
 		void setUnit(Unit const unit) {

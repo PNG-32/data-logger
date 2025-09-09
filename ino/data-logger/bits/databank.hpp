@@ -152,15 +152,15 @@ namespace Bits {
 			updateHeader();
 		}
 
-		/// @brief Returns the location of the bank.
+		/// @brief Returns the EEPROM address of the bank.
 		/// @return Location of bank.		
-		inline uint16	location() const	{return headerLocation;		}
+		inline uint16	address() const	{return headerLocation;		}
 		/// @brief Returns the amount of entries in the bank.
 		/// @return Entry count.
-		inline uint16	size() const		{return header.entryCount;	}
+		inline uint16	size() const	{return header.entryCount;	}
 		/// @brief Returns whether the bank is empty.
 		/// @return Whether bank is empty.
-		inline bool		empty() const		{return size() > 0;			}
+		inline bool		empty() const	{return size() > 0;			}
 
 	private:
 		/// @brief Header location.

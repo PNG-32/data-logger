@@ -2,10 +2,30 @@
 #define BITS_DATALOGGER_H
 
 #include "types.hpp"
-
-#include <RTClib.h>
+#include "sensor.hpp"
+#include "clock.hpp"
+#include "databank.hpp"
 
 namespace Bits {
+	struct DataLogger {
+		struct Log {
+			uint32			timestamp;
+			Sensor::Value	value;
+		};
+
+		DataLogger(uint8 const clock, uint8 const sensor):
+			clock(clock, 0),
+			sensor(sensor, clock.address() + sizeof(Clock::Info)),
+			logger(sensor.address() + sizeof(Sensor::Info)) {
+			if (!clock.adjusted())
+				clock.adjust({F(__DATE__), F(__TIME__)});
+		}
+
+	private:
+		Clock			clock;
+		Sensor			sensor;
+		DataBank<Log>	logger;
+	};
 }
 
 #endif
