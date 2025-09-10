@@ -13,9 +13,9 @@ namespace Bits {
 			Sensor::Value	value;
 		};
 
-		DataLogger(uint8 const clock, uint8 const sensor):
-			clock(clock, 0),
-			sensor(sensor, clock.address() + sizeof(Clock::Info)),
+		DataLogger(uint8 const clockPin, uint8 const sensorPin):
+			clock(clockPin, 0),
+			sensor(sensorPin, clock.address() + sizeof(Clock::Info)),
 			logger(sensor.address() + sizeof(Sensor::Info)) {
 			if (!clock.adjusted())
 				clock.adjust({F(__DATE__), F(__TIME__)});

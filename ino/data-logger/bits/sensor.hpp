@@ -4,7 +4,7 @@
 #include "types.hpp"
 #include "record.hpp"
 
-#include <RTClib.h>
+#include <DHT.h>
 
 namespace Bits {
 	struct Sensor {
@@ -55,6 +55,8 @@ namespace Bits {
 		Unit getUnit() const {
 			return info.get().unit;
 		}
+
+		uint16 address() const {return info.address();}
 
 	private:
 		uint8 const		pin;
