@@ -26,6 +26,8 @@ namespace Bits {
 			pin(pin), info(info) {
 		}
 
+		void begin() {pinMode(pin, INPUT);}
+
 		int16 read() const {
 			auto const v	= readRaw();
 			auto const adj	= info.get().adjustment;

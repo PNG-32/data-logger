@@ -13,10 +13,10 @@ namespace Bits {
 			int8 timeZone: 7;
 		};
 
-		Clock(avr_pin const pin, eeprom_address const info):
-			pin(pin), info(info) {
-			rtc.begin();
-		}
+		Clock(eeprom_address const info):
+			info(info) {}
+
+		void begin() {rtc.begin();}
 
 		uint32 unixNow() const {
 			return rtc.now().unixtime() + timeZoneOffset();

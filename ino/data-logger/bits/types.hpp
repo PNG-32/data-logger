@@ -41,7 +41,8 @@ template <class T>	using owner	= T*;
 using pointer = void*;
 using address = void const*;
 
-using interrupt = void();
+template <class T>
+using As = T;
 
 #define PACKED [[gnu::aligned(1)]]
 

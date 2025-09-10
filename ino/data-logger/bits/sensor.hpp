@@ -32,6 +32,8 @@ namespace Bits {
 			pin(pin), info(info), dht(pin, DHT22) {
 		}
 
+		void begin() {dht.begin();}
+
 		Value read() const {
 			float const t = dht.readTemperature() * 100;
 			Value v{t, dht.readHumidity() * 100};

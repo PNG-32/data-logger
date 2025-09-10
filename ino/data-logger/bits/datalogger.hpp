@@ -6,6 +6,7 @@
 #include "clock.hpp"
 #include "ldr.hpp"
 #include "databank.hpp"
+#include "display.hpp"
 
 namespace Bits {
 	struct DataLogger {
@@ -15,12 +16,18 @@ namespace Bits {
 			uint8_t			luminosity;
 		};
 
-		DataLogger(uint8 const clockPin, uint8 const sensorPin, uint8 const ldrPin):
-			clock(clockPin, 0),
+		DataLogger(uint8 const sensorPin = 2, uint8 const ldrPin = A0):
+			clock(0),
 			sensor(sensorPin, clock.end()),
 			ldr(ldrPin, sensor.end()),
-			logger(ldr.end()) {
+			db(ldr.end()),
+			display() {}
+
+		void begin() {
 			Serial.begin(9600);
+			clock.begin();
+			ldr.begin();
+			display.begin();
 			if (!clock.adjusted())
 				clock.adjust({F(__DATE__), F(__TIME__)});
 		}
@@ -28,7 +35,7 @@ namespace Bits {
 		void update() {
 			bool const inTheDangerZone = sensor.inTheDangerZone() || ldr.inTheDangerZone();
 			if (inTheDangerZone && !cooldown) {
-				//logger.record();
+				//db.record();
 				cooldown = 1000;
 			} else --cooldown;
 		}
@@ -37,7 +44,8 @@ namespace Bits {
 		Clock			clock;
 		Sensor			sensor;
 		LDR				ldr;
-		DataBank<Log>	logger;
+		DataBank<Log>	db;
+		Display			display;
 		uint16			cooldown = 0;
 	};
 }
