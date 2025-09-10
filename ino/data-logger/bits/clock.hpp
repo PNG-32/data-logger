@@ -8,12 +8,12 @@
 
 namespace Bits {
 	struct Clock {
-		struct Info {
+		struct PACKED Info {
 			int8 adjusted: 1;
 			int8 timeZone: 7;
 		};
 
-		Clock(uint8 const pin, uint16 const info):
+		Clock(avr_pin const pin, eeprom_address const info):
 			pin(pin), info(info) {
 			rtc.begin();
 		}
@@ -49,7 +49,8 @@ namespace Bits {
 			return info.get().adjusted;
 		}
 
-		uint16 address() const {return info.address();}
+		uint16 address() const	{return info.address();				}
+		uint16 end() const		{return address()	+ sizeof(Info);	}
 
 	private:
 		int32 timeZoneOffset() const {

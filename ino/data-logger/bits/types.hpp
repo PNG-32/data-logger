@@ -32,6 +32,9 @@ using uqword	= u64;
 using dword		= udword;
 using qword		= uqword;
 
+using eeprom_address	= word;
+using avr_pin			= byte;
+
 template <class T>	using ref	= T*;
 template <class T>	using owner	= T*;
 

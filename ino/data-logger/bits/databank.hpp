@@ -25,7 +25,7 @@ namespace Bits {
 			uint16	entryCount	: 5;
 			
 			/// @brief Constructs a header from a given EEPROM location.
-			constexpr static Header fromLocation(word const location) {
+			constexpr static Header fromLocation(eeprom_address const location) {
 				return {
 					true,
 					location + sizeof(Header),
@@ -48,7 +48,7 @@ namespace Bits {
 
 		/// @brief Constructs the data bank from a memory location.
 		/// @param location Memory location the data bank is stored in. By default, it is the beginning of the EEPROM (`0`).
-		DataBank(uint16 const location = 0): headerLocation(location) {
+		DataBank(eeprom_address const location = 0): headerLocation(location) {
 			byte v;
 			EEPROM.begin();
 			if (EEPROM.read(location))
@@ -58,7 +58,7 @@ namespace Bits {
 		/// @brief Constructs the data bank from a header and a memory location.
 		/// @param header Data bank header to use.	
 		/// @param location Memory location the data bank is stored in.
-		DataBank(Header const& header, uint16 const location): headerLocation(location), header(header) {
+		DataBank(Header const& header, eeprom_address const location): headerLocation(location), header(header) {
 			updateHeader();
 		}
 
@@ -154,17 +154,17 @@ namespace Bits {
 
 		/// @brief Returns the EEPROM address of the bank.
 		/// @return Location of bank.		
-		inline uint16	address() const	{return headerLocation;		}
+		inline eeprom_address	address() const	{return headerLocation;		}
 		/// @brief Returns the amount of entries in the bank.
 		/// @return Entry count.
-		inline uint16	size() const	{return header.entryCount;	}
+		inline uint16			size() const	{return header.entryCount;	}
 		/// @brief Returns whether the bank is empty.
 		/// @return Whether bank is empty.
-		inline bool		empty() const	{return size() > 0;			}
+		inline bool				empty() const	{return size() > 0;			}
 
 	private:
 		/// @brief Header location.
-		uint16 headerLocation = 0;
+		eeprom_address headerLocation = 0;
 		/// @brief Bank header.	
 		Header header = Header::fromLocation(0);
 

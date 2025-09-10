@@ -8,15 +8,16 @@
 
 namespace Bits {
 	struct DataLogger {
-		struct Log {
+		struct PACKED Log {
 			uint32			timestamp;
 			Sensor::Value	value;
 		};
 
-		DataLogger(uint8 const clockPin, uint8 const sensorPin):
+		DataLogger(uint8 const clockPin, uint8 const sensorPin, uint8 const ldrPin):
 			clock(clockPin, 0),
-			sensor(sensorPin, clock.address() + sizeof(Clock::Info)),
-			logger(sensor.address() + sizeof(Sensor::Info)) {
+			sensor(sensorPin, clock.end()),
+			ldr(ldrPin, sensor.end()),
+			logger(ldr.end()) {
 			if (!clock.adjusted())
 				clock.adjust({F(__DATE__), F(__TIME__)});
 		}
@@ -24,6 +25,7 @@ namespace Bits {
 	private:
 		Clock			clock;
 		Sensor			sensor;
+		LDR				ldr;
 		DataBank<Log>	logger;
 	};
 }

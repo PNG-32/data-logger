@@ -14,16 +14,20 @@ namespace Bits {
 			BSU_KELVIN		= 'K',
 		};
 
-		struct Value {
+		struct PACKED Value {
 			int16 temperature;
 			int16 humidity;
 		};
 
-		struct Info {
+		struct PACKED Threshold {
+			Value min, max;
+		};
+
+		struct PACKED Info {
 			Unit unit = Unit::BSU_CELSIUS;
 		};
 
-		Sensor(uint8 const pin, uint16 const info):
+		Sensor(avr_pin const pin, eeprom_address const info):
 			pin(pin), info(info), dht(pin, DHT22) {
 		}
 
@@ -56,7 +60,8 @@ namespace Bits {
 			return info.get().unit;
 		}
 
-		uint16 address() const {return info.address();}
+		uint16 address() const	{return info.address();				}
+		uint16 end() const		{return address()	+ sizeof(Info);	}
 
 	private:
 		uint8 const		pin;
