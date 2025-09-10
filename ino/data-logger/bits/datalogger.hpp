@@ -10,8 +10,25 @@
 
 namespace Bits {
 	struct DataLogger {
+		enum class LightDisplay {
+			BDLLD_CONFIG_ERROR,
+			BDLLD_OK,
+			BDLLD_EMERGENCY,
+		};
+
 		struct PACKED Info {
-			uint8 firstInit: 1;
+			uint8 clockOK:			1;
+			uint8 temperatureOK:	1;
+			uint8 humidityOK:		1;
+			uint8 luminosityOK:		1;
+			constexpr bool ok() {
+				return (
+					clockOK
+				&&	temperatureOK
+				&&	humidityOK
+				&&	luminosityOK
+				);
+			}
 		};
 
 		struct PACKED Log {
@@ -34,7 +51,7 @@ namespace Bits {
 			LEDPins const&	ledPins		= {3, 4, 5}
 		):
 			info(0),
-			clock(info.end()),
+			clock(info.address() + sizeof(Info)),
 			sensor(sensorPin, clock.end()),
 			ldr(ldrPin, sensor.end()),
 			db(ldr.end()),
@@ -54,14 +71,33 @@ namespace Bits {
 		}
 
 		void update() {
+			if (!info.get().ok()) {
+				setLights(LightDisplay::BDLLD_CONFIG_ERROR);
+				return;
+			}
 			bool const inTheDangerZone = sensor.inTheDangerZone() || ldr.inTheDangerZone();
-			if (inTheDangerZone && !cooldown) {
-				//db.record();
-				cooldown = 1000;
-			} else --cooldown;
+			if (inTheDangerZone) {
+				if (!cooldown) {
+					//db.record({});
+					cooldown = 1000;
+				}
+				setLights(LightDisplay::BDLLD_EMERGENCY);
+			} else setLights(LightDisplay::BDLLD_OK);
+			if (cooldown) --cooldown;
 		}
 
 	private:
+		void setLights(LightDisplay const lights) {
+			digitalWrite(led.red,		LOW);
+			digitalWrite(led.yellow,	LOW);
+			digitalWrite(led.green,		LOW);
+			switch (lights) {
+				case (LightDisplay::BDLLD_OK):				digitalWrite(led.green,		HIGH);	break;
+				case (LightDisplay::BDLLD_CONFIG_ERROR):	digitalWrite(led.yellow,	HIGH);	break;
+				case (LightDisplay::BDLLD_EMERGENCY):		digitalWrite(led.red,		HIGH);	break;
+			}
+		}
+
 		Record<Info>	info;
 		Clock			clock;
 		Sensor			sensor;
