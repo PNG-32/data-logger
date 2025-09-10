@@ -26,13 +26,13 @@ namespace Bits {
 			pin(pin), info(info) {
 		}
 
-		uint8 read() const {
-			uint16 const v = readRaw();
-			auto const i = info.get();
-			return constrain(map(v, i.adjustment.min, i.adjustment.max, 0, 255), 0, 255);
+		int16 read() const {
+			auto const v	= readRaw();
+			auto const adj	= info.get().adjustment;
+			return constrain(map(v, adj.min, adj.max, 0, 100), 0, 100);
 		}
 
-		uint16 readRaw() const {
+		int16 readRaw() const {
 			return analogRead(pin);
 		}
 
@@ -47,7 +47,7 @@ namespace Bits {
 		}
 
 		Threshold getThreshold() const {
-			return info.get().adjustment;
+			return info.get().threshold;
 		}
 
 		void setThreshold(Threshold const& threshold) {
@@ -61,7 +61,7 @@ namespace Bits {
 		}
 
 		bool inTheSafeZone() const {
-			auto const v			= readRaw();
+			auto const v			= read();
 			auto const threshold	= info.get().threshold;
 			return (
 				threshold.min <= v

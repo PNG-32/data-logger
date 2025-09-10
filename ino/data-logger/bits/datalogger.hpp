@@ -12,6 +12,7 @@ namespace Bits {
 		struct PACKED Log {
 			uint32			timestamp;
 			Sensor::Value	value;
+			uint8_t			luminosity;
 		};
 
 		DataLogger(uint8 const clockPin, uint8 const sensorPin, uint8 const ldrPin):

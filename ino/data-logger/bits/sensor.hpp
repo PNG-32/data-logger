@@ -67,7 +67,7 @@ namespace Bits {
 			info = i;
 		}
 
-		Unit getThreshold() const {
+		Threshold getThreshold() const {
 			return info.get().threshold;
 		}
 
