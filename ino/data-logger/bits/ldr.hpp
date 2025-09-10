@@ -7,11 +7,19 @@
 namespace Bits {
 	struct LDR {
 		struct PACKED Adjustment {
-			uint16 min = 0, max = 1023
+			uint16 min = 0, max = 1023;
+
+			constexpr bool valid() const	{return (min < max);	}
+			constexpr bool invalid() const	{return !valid();		}
+		};
+
+		struct PACKED Threshold {
+			uint16 min = 0, max = 1023;
 		};
 
 		struct PACKED Info {
-			Adjustment adjustment;
+			Adjustment	adjustment;
+			Threshold	threshold;
 		};
 
 		LDR(avr_pin const pin, eeprom_address const info):
@@ -28,14 +36,37 @@ namespace Bits {
 			return analogRead(pin);
 		}
 
-		void setUnit(Unit const unit) {
+		Adjustment getAdjustment() const {
+			return info.get().adjustment;
+		}
+
+		void setAdjustment(Adjustment const& adjustment) {
 			Info i = info;
-			i.unit = unit;
+			i.adjustment = adjustment;
 			info = i;
 		}
 
-		Unit getUnit() const {
-			return info.get().unit;
+		Threshold getThreshold() const {
+			return info.get().adjustment;
+		}
+
+		void setThreshold(Threshold const& threshold) {
+			Info i = info;
+			i.threshold = threshold;
+			info = i;
+		}
+
+		bool inTheDangerZone() const {
+			return !inTheSafeZone();
+		}
+
+		bool inTheSafeZone() const {
+			auto const v			= readRaw();
+			auto const threshold	= info.get().threshold;
+			return (
+				threshold.min <= v
+			&&	v <= threshold.max
+			);
 		}
 
 		uint16 address() const	{return info.address();				}
@@ -44,7 +75,6 @@ namespace Bits {
 	private:
 		uint8 const		pin;
 		Record<Info>	info;
-		DHT				dht;
 	};
 }
 

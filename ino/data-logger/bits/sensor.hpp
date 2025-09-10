@@ -24,7 +24,8 @@ namespace Bits {
 		};
 
 		struct PACKED Info {
-			Unit unit = Unit::BSU_CELSIUS;
+			Unit		unit		= Unit::BSU_CELSIUS;
+			Threshold	threshold;
 		};
 
 		Sensor(avr_pin const pin, eeprom_address const info):
@@ -60,10 +61,47 @@ namespace Bits {
 			return info.get().unit;
 		}
 
+		void setThreshold(Threshold const& threshold) {
+			Info i = info;
+			i.threshold = threshold;
+			info = i;
+		}
+
+		Unit getThreshold() const {
+			return info.get().threshold;
+		}
+
+		bool inTheDangerZone() const {
+			return !inTheSafeZone();
+		}
+
+		bool inTheSafeZone() const {
+			auto const v			= readRaw();
+			auto const threshold	= info.get().threshold;
+			return (
+				isTemperatureOK(v.temperature, threshold)
+			&&	isHumidityOK(v.humidity, threshold)
+			);
+		}
+
 		uint16 address() const	{return info.address();				}
 		uint16 end() const		{return address()	+ sizeof(Info);	}
 
 	private:
+		constexpr static bool isTemperatureOK(int16 const t, Threshold const& threshold) {
+			return (
+				threshold.min.temperature <= t
+			&&	t <= threshold.max.temperature
+			);
+		}
+
+		constexpr static bool isHumidityOK(int16 const h, Threshold const& threshold) {
+			return (
+				threshold.min.humidity <= h
+			&&	h <= threshold.max.humidity
+			);
+		}
+
 		uint8 const		pin;
 		Record<Info>	info;
 		DHT				dht;

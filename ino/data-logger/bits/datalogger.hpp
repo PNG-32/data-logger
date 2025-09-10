@@ -4,6 +4,7 @@
 #include "types.hpp"
 #include "sensor.hpp"
 #include "clock.hpp"
+#include "ldr.hpp"
 #include "databank.hpp"
 
 namespace Bits {
