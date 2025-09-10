@@ -20,8 +20,17 @@ namespace Bits {
 			sensor(sensorPin, clock.end()),
 			ldr(ldrPin, sensor.end()),
 			logger(ldr.end()) {
+			Serial.begin(9600);
 			if (!clock.adjusted())
 				clock.adjust({F(__DATE__), F(__TIME__)});
+		}
+
+		void update() {
+			bool const inTheDangerZone = sensor.inTheDangerZone() || ldr.inTheDangerZone();
+			if (inTheDangerZone && !cooldown) {
+				//logger.record();
+				cooldown = 1000;
+			} else --cooldown;
 		}
 
 	private:
@@ -29,6 +38,7 @@ namespace Bits {
 		Sensor			sensor;
 		LDR				ldr;
 		DataBank<Log>	logger;
+		uint16			cooldown = 0;
 	};
 }
 

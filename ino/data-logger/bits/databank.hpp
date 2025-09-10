@@ -152,6 +152,12 @@ namespace Bits {
 			updateHeader();
 		}
 
+		void record(EntryType const& entry) {
+			if (size() >= MAX_ENTRIES)
+				fastShiftDown();
+			push(entry);
+		}
+
 		/// @brief Returns the EEPROM address of the bank.
 		/// @return Location of bank.		
 		inline eeprom_address	address() const	{return headerLocation;		}

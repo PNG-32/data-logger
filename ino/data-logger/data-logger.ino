@@ -87,6 +87,6 @@ void setup() {
 }
 
 void loop() {
-  image1();
+  image2();
   delay(2000);
 }
