@@ -1,5 +1,5 @@
-#ifndef BITS_DATASLICE_H
-#define BITS_DATASLICE_H
+#ifndef BITS_RECORD_H
+#define BITS_RECORD_H
 
 #include "types.hpp"
 
