@@ -98,35 +98,62 @@ namespace Bits {
 				return;
 			}
 			screenCooldown = 1000;
+			auto const now = clock.now();
 			String const ts = 
-				clock.now().timestamp(DateTime::TIMESTAMP_DATE)
+				now.timestamp(DateTime::TIMESTAMP_DATE)
 			+	" "
-			+	clock.now().timestamp(DateTime::TIMESTAMP_TIME)
+			+	now.timestamp(DateTime::TIMESTAMP_TIME)
 			;
 			display.setCursorPosition(0, 0);
 			display.write(ts);
 			auto const v = sensor.read();
-			writeFloat(v.temperature / 100.0, sensor.getUnit(), 0, 1);
-			writeFloat(v.humidity / 100.0, '%', 6, 1);
+			writeDecimal(v.temperature, sensor.getUnit(), 0, 1);
+			writeDecimal(v.humidity, '%', 6, 1);
 			writeInt(ldr.read(), '%', 12, 1);
 		}
 
-		void writeFloat(float const val, char const append, uint8 const x, uint8 const y) {
-			display.setCursorPosition(x, y);
-			display.writeNumber(val);
-			display.setCursorPosition(x + 5, y);
-			display.write(append);
-			display.write("           ");
-			display.setCursorPosition(x + 7);
+		void writeInt(int32 const val, char const append, uint8 const x, uint8 const y, uint8 const maxDigits = 2) {
+			if (cents < 0) {
+				display.write('-');
+				return writeInt(-val, append, x+1, y);
+			} else {
+				auto v = val;
+				uint8 digits = 0;
+				uint32 max = 1;
+				while (v > 9 && digits < maxDigits) {
+					v /= 10;
+					max *= 10;
+					++digits;
+				}
+				display.setCursorPosition(x + (maxDigits - digits), y);
+				display.writeNumber(static_cast<uint32>(val) % max, 10);
+				display.setCursorPosition(x + maxDigits, y);
+				display.write(append);
+			}
 		}
-
-		void writeInt(int32 const val, char const append, uint8 const x, uint8 const y) {
-			display.setCursorPosition(x, y);
-			display.writeNumber(val);
-			display.setCursorPosition(x + 4, y);
-			display.write(append);
-			display.write("           ");
-			display.setCursorPosition(x + 6);
+		
+		void writeDecimal(int32 const cents, char const append, uint8 const x, uint8 const y) {
+			if (cents < 0) {
+				display.write('-');
+				return writeDecimal(-cents, append, x+1, y);
+			} else {
+				display.setCursorPosition(x, y);
+				auto const
+					num = static_cast<uint32>(cents) / 100,
+					frac = static_cast<uint32>(cents) % 100
+				;
+				if (num < 10)
+					display.write('0');
+				display.writeNumber(num, 10);
+				display.write('.');
+				if (frac < 10)
+					display.write('0');
+				display.writeNumber(frac, 10);
+				if (frac % 10 && frac > 0)
+					display.write('0');
+				display.setCursorPosition(x + 5, y);
+				display.write(append);
+			}
 		}
 
 		void setLights(LightDisplay const lights) {
