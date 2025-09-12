@@ -78,15 +78,57 @@ namespace Bits {
 			bool const inTheDangerZone = sensor.inTheDangerZone() || ldr.inTheDangerZone();
 			if (inTheDangerZone) {
 				if (!cooldown) {
-					//db.record({});
+					db.record({
+						clock.unixNow(),
+						sensor.readRaw(),
+						ldr.read()
+					});
 					cooldown = 1000;
 				}
 				setLights(LightDisplay::BDLLD_EMERGENCY);
 			} else setLights(LightDisplay::BDLLD_OK);
 			if (cooldown) --cooldown;
+			updateScreen();
 		}
 
 	private:
+		void updateScreen() {
+			if (screenCooldown) {
+				--screenCooldown;
+				return;
+			}
+			screenCooldown = 1000;
+			String const ts = 
+				clock.now().timestamp(DateTime::TIMESTAMP_DATE)
+			+	" "
+			+	clock.now().timestamp(DateTime::TIMESTAMP_TIME)
+			;
+			display.setCursorPosition(0, 0);
+			display.write(ts);
+			auto const v = sensor.read();
+			writeFloat(v.temperature / 100.0, sensor.getUnit(), 0, 1);
+			writeFloat(v.humidity / 100.0, '%', 6, 1);
+			writeInt(ldr.read(), '%', 12, 1);
+		}
+
+		void writeFloat(float const val, char const append, uint8 const x, uint8 const y) {
+			display.setCursorPosition(x, y);
+			display.writeNumber(val);
+			display.setCursorPosition(x + 5, y);
+			display.write(append);
+			display.write("           ");
+			display.setCursorPosition(x + 7);
+		}
+
+		void writeInt(int32 const val, char const append, uint8 const x, uint8 const y) {
+			display.setCursorPosition(x, y);
+			display.writeNumber(val);
+			display.setCursorPosition(x + 4, y);
+			display.write(append);
+			display.write("           ");
+			display.setCursorPosition(x + 6);
+		}
+
 		void setLights(LightDisplay const lights) {
 			digitalWrite(led.red,		LOW);
 			digitalWrite(led.yellow,	LOW);
@@ -104,7 +146,8 @@ namespace Bits {
 		LDR				ldr;
 		DataBank<Log>	db;
 		Display			display;
-		uint16			cooldown = 0;
+		uint16			cooldown		= 0;
+		uint16			screenCooldown	= 0;
 		LEDPins			led;
 
 	};

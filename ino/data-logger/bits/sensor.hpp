@@ -35,15 +35,7 @@ namespace Bits {
 		void begin() {dht.begin();}
 
 		Value read() const {
-			float const t = dht.readTemperature() * 100;
-			Value v{t, dht.readHumidity() * 100};
-			switch (info.get().unit) {
-				default:
-				case Unit::BSU_CELSIUS: break;
-				case Unit::BSU_FARENHEIT:	v.temperature = (t * 1.8 + 32.0) * 100;	break;
-				case Unit::BSU_KELVIN:		v.temperature -= 27315;					break;
-			}
-			return v;
+			return toCurrentUnit(readRaw());
 		}
 
 		Value readRaw() const {
@@ -51,6 +43,16 @@ namespace Bits {
 				dht.readTemperature()	* 100,
 				dht.readHumidity()		* 100
 			};
+		}
+
+		Value toCurrentUnit(Value v) const {
+			switch (info.get().unit) {
+				default:
+				case Unit::BSU_CELSIUS: break;
+				case Unit::BSU_FARENHEIT:	v.temperature = (v.temperature * 1.8 + 32.0) * 100;	break;
+				case Unit::BSU_KELVIN:		v.temperature -= 27315;								break;
+			}
+			return v;
 		}
 
 		void setUnit(Unit const unit) {
