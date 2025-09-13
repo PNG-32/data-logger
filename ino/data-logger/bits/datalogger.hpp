@@ -102,7 +102,11 @@ namespace Bits {
 				cooldown = 100;
 				setLights(LightDisplay::BDLLD_OK);
 			}
-			if (Serial.peek() != '\0')
+			if (Serial.peek() != '\n') {
+				auto const str = Serial.readStringUntil('\n');
+				auto const result = parser.evaluate(str.toLowerCase());
+				// TODO: the rest of the parser stuff
+			}
 			if (cooldown) --cooldown;
 			updateScreen();
 			Wait::millis(1);
