@@ -14,7 +14,7 @@ namespace Bits {
 		};
 
 		struct PACKED Threshold {
-			uint16 min = 0, max = 1023;
+			int16 min = 0, max = 1023;
 		};
 
 		struct PACKED Info {

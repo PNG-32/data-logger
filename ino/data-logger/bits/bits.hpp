@@ -9,6 +9,7 @@
 #include "clock.hpp"
 #include "sensor.hpp"
 #include "display.hpp"
+#include "parser.hpp"
 #include "datalogger.hpp"
 
 #endif

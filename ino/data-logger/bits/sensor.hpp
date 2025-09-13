@@ -50,9 +50,18 @@ namespace Bits {
 				default:
 				case Unit::BSU_CELSIUS: break;
 				case Unit::BSU_FARENHEIT:	v.temperature = (v.temperature * 1.8 + 32.0) * 100;	break;
-				case Unit::BSU_KELVIN:		v.temperature -= 27315;								break;
+				case Unit::BSU_KELVIN:		v.temperature += 27315;								break;
 			}
 			return v;
+		}
+		
+		constexpr int16 toCelcius(int16 const value, Unit const unit) {
+			switch (unit) {
+				default:
+				case Unit::BSU_CELSIUS:		return value;
+				case Unit::BSU_FARENHEIT:	return (value - 32.0) * (5.0/9.0);
+				case Unit::BSU_KELVIN:		return value - 27315;
+			}
 		}
 
 		void setUnit(Unit const unit) {

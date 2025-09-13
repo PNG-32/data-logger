@@ -7,6 +7,7 @@
 #include "ldr.hpp"
 #include "databank.hpp"
 #include "display.hpp"
+#include "parser.hpp"
 
 namespace Bits {
 	struct DataLogger {
@@ -34,7 +35,17 @@ namespace Bits {
 		struct PACKED Log {
 			uint32			timestamp;
 			Sensor::Value	value;
-			uint8_t			luminosity;
+			int16			luminosity;
+
+			String toString(Sensor& sensor) const {
+				String log = "[";
+				log += DateTime(timestamp).timestamp() + "]: ";
+				auto const v = sensor.toCurrentUnit(value);
+				log += "Temperature: " + String(v.temperature) + static_cast<char>(sensor.getUnit()) + ", ";
+				log += "Humidity: " + String(v.humidity) + "% ";
+				log += "Luminosity: " + String(luminosity) + "%;";
+				return log;
+			}
 		};
 
 		struct LEDPins {
@@ -56,7 +67,8 @@ namespace Bits {
 			ldr(ldrPin, sensor.end()),
 			db(ldr.end()),
 			display(),
-			led(ledPins) {}
+			led(ledPins),
+			parser{db, clock, sensor, ldr} {}
 
 		void begin() {
 			Serial.begin(9600);
@@ -83,12 +95,17 @@ namespace Bits {
 						sensor.readRaw(),
 						ldr.read()
 					});
-					cooldown = 1000;
+					cooldown = 15000;
 				}
 				setLights(LightDisplay::BDLLD_EMERGENCY);
-			} else setLights(LightDisplay::BDLLD_OK);
+			} else {
+				cooldown = 100;
+				setLights(LightDisplay::BDLLD_OK);
+			}
+			if (Serial.peek() != '\0')
 			if (cooldown) --cooldown;
 			updateScreen();
+			Wait::millis(1);
 		}
 
 	private:
@@ -107,13 +124,13 @@ namespace Bits {
 			display.setCursorPosition(0, 0);
 			display.write(ts);
 			auto const v = sensor.read();
-			writeDecimal(v.temperature, sensor.getUnit(), 0, 1);
+			writeDecimal(v.temperature, static_cast<char>(sensor.getUnit()), 0, 1);
 			writeDecimal(v.humidity, '%', 6, 1);
 			writeInt(ldr.read(), '%', 12, 1);
 		}
 
 		void writeInt(int32 const val, char const append, uint8 const x, uint8 const y, uint8 const maxDigits = 2) {
-			if (cents < 0) {
+			if (val < 0) {
 				display.write('-');
 				return writeInt(-val, append, x+1, y);
 			} else {
@@ -126,7 +143,7 @@ namespace Bits {
 					++digits;
 				}
 				display.setCursorPosition(x + (maxDigits - digits), y);
-				display.writeNumber(static_cast<uint32>(val) % max, 10);
+				display.write(static_cast<uint32>(val) % max, 10);
 				display.setCursorPosition(x + maxDigits, y);
 				display.write(append);
 			}
@@ -144,11 +161,11 @@ namespace Bits {
 				;
 				if (num < 10)
 					display.write('0');
-				display.writeNumber(num, 10);
+				display.write(num, 10);
 				display.write('.');
 				if (frac < 10)
 					display.write('0');
-				display.writeNumber(frac, 10);
+				display.write(frac, 10);
 				if (frac % 10 && frac > 0)
 					display.write('0');
 				display.setCursorPosition(x + 5, y);
@@ -176,6 +193,7 @@ namespace Bits {
 		uint16			cooldown		= 0;
 		uint16			screenCooldown	= 0;
 		LEDPins			led;
+		Parser<Log>		parser;
 
 	};
 }
