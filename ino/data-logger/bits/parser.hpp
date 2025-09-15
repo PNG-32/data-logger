@@ -229,7 +229,8 @@ namespace Bits {
 				for (usize i = 0; i < EEPROM.length(); ++i)
 					EEPROM[i] = 0;
 				return {-1};
-			} else return {Response::Type::BPRT_INVALID_COMMAND};
+			} else if (command == "@reset") return {-1};
+			else return {Response::Type::BPRT_INVALID_COMMAND};
 			return {};
 		}
 

@@ -24,10 +24,10 @@ namespace Bits {
 	}
 
 	/// @brief Resets the arduino.
-	/// @warning Effectively crashes it! Do not use this without knowing what you're doing!
+	/// @warning Soft resets the adruino! Do not use this without knowing what you're doing!
 	[[gnu::always_inline, noreturn]]
 	inline void reset() {
-		As<void(void)>* crash = 0;
+		As<void(void)>* crash = nullptr;
 		crash();
 	}
 }

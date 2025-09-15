@@ -9,6 +9,7 @@
 #include "display.hpp"
 #include "parser.hpp"
 #include "core.hpp"
+#include "pitch.hpp"
 
 /// @brief Helper classes & functions.
 namespace Bits {
@@ -95,6 +96,7 @@ namespace Bits {
 			db(ldr.end()),
 			display(),
 			led(ledPins),
+			alarm(alarmPin),
 			parser{db, clock, sensor, ldr} {}
 
 		/// @brief Initializes the data logger.
@@ -109,10 +111,14 @@ namespace Bits {
 			info.begin();
 			if (!clock.adjusted())
 				clock.adjust({F(__DATE__), F(__TIME__)});
-			display.setDisplay(Display::State::BDS_ON);
 			pinMode(led.red,	OUTPUT);
 			pinMode(led.yellow,	OUTPUT);
 			pinMode(led.green,	OUTPUT);
+			pinMode(led.green,	OUTPUT);
+			pinMode(alarm,		OUTPUT);
+			display.setDisplay(Display::State::BDS_OFF);
+			Wait::seconds(1);
+			display.setDisplay(Display::State::BDS_ON);
 			Serial.println("Command-line ready.");
 		}
 
@@ -127,7 +133,7 @@ namespace Bits {
 						Serial.println("Operation completed successfully.");
 						auto i = info.get();
 						switch (result.id) {
-							case -1: reset();
+							case static_cast<decltype(result.id)>(-1): reset();
 							case 1: i.clockOK = true;		break;
 							case 2: i.temperatureOK = true; break;
 							case 3: i.humidityOK = true;	break;
@@ -238,6 +244,7 @@ namespace Bits {
 			digitalWrite(led.red,		LOW);
 			digitalWrite(led.yellow,	LOW);
 			digitalWrite(led.green,		LOW);
+			tone(alarm, );
 			switch (lights) {
 				case (LightDisplay::BDLLD_OK):				digitalWrite(led.green,		HIGH);	break;
 				case (LightDisplay::BDLLD_CONFIG_ERROR):	digitalWrite(led.yellow,	HIGH);	break;
@@ -255,7 +262,7 @@ namespace Bits {
 		uint16			screenCooldown	= 0;
 		LEDPins			led;
 		ParserType		parser;
-
+		avr_pin			alarm;
 	};
 }
 
