@@ -2,7 +2,7 @@
 #define BITS_H
 
 #include "types.hpp"
-#include "wait.hpp"
+#include "core.hpp"
 #include "interrupts.hpp"
 #include "databank.hpp"
 #include "record.hpp"

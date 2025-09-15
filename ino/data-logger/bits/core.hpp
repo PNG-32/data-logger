@@ -1,5 +1,5 @@
-#ifndef BITS_WAIT_H
-#define BITS_WAIT_H
+#ifndef BITS_CORE_H
+#define BITS_CORE_H
 
 #include "types.hpp"
 
@@ -21,6 +21,14 @@ namespace Bits {
 		/// @param time Number of seconds to wait for.
 		[[gnu::always_inline]]
 		inline void seconds(float const time)	{millis(time * 1000);	}
+	}
+
+	/// @brief Resets the arduino.
+	/// @warning Effectively crashes it! Do not use this without knowing what you're doing!
+	[[gnu::always_inline, noreturn]]
+	inline void reset() {
+		As<void(void)>* crash = 0;
+		crash();
 	}
 }
 

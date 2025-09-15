@@ -11,11 +11,11 @@ namespace Bits {
 		BCT_CACHE_SAVE_ON_DTOR
 	};
 
-	template <class T, CacheType CACHE = CacheType::BCT_CACHE_SAVE_ON_SET>
+	template <class T, CacheType CACHE = CacheType::BCT_CACHE_SAVE_ON_SET, bool AUTOINIT = false>
 	struct Record;
 
-	template <class T>
-	struct Record<T, CacheType::BCT_NO_CACHE> {
+	template <class T, bool AUTOINIT>
+	struct Record<T, CacheType::BCT_NO_CACHE, AUTOINIT> {
 		Record(uint16 const address):
 			memaddr(address) {}
 
@@ -40,10 +40,12 @@ namespace Bits {
 		uint16 const memaddr;
 	};
 
-	template <class T>
-	struct Record<T, CacheType::BCT_CACHE_SAVE_ON_SET> {
+	template <class T, bool AUTOINIT>
+	struct Record<T, CacheType::BCT_CACHE_SAVE_ON_SET, AUTOINIT> {
 		Record(uint16 const address):
-			memaddr(address) {}
+			memaddr(address) {if (AUTOINIT) begin();}
+
+		void begin() {EEPROM.get(memaddr, val);}
 
 		T get() const {
 			return val;
@@ -71,10 +73,12 @@ namespace Bits {
 		T val;
 	};
 
-	template <class T>
-	struct Record<T, CacheType::BCT_CACHE_MANUAL_SAVE> {
+	template <class T, bool AUTOINIT>
+	struct Record<T, CacheType::BCT_CACHE_MANUAL_SAVE, AUTOINIT> {
 		Record(uint16 const address):
-			memaddr(address) {}
+			memaddr(address) {if (AUTOINIT) begin();}
+
+		void begin() {EEPROM.get(memaddr, val);}
 
 		T get() const {
 			return val;
@@ -100,12 +104,14 @@ namespace Bits {
 		T val;
 	};
 
-	template <class T>
-	struct Record<T, CacheType::BCT_CACHE_SAVE_ON_DTOR> {
+	template <class T, bool AUTOINIT>
+	struct Record<T, CacheType::BCT_CACHE_SAVE_ON_DTOR, AUTOINIT> {
 		Record(uint16 const address):
-			memaddr(address) {}
+			memaddr(address) {if (AUTOINIT) begin();}
 
 		~Record() {save();}
+
+		void begin() {EEPROM.get(memaddr, val);}
 
 		T get() const {
 			return val;

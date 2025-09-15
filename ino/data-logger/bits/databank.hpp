@@ -8,7 +8,7 @@
 /// @brief EEPROM size.
 constexpr uint16 const EEPROM_SIZE = 1024;
 
-/// @brief Library functions.
+/// @brief Helper classes & functions.
 namespace Bits {
 	/// @brief EEPROM data bank.
 	/// @tparam T Entry type.
@@ -20,9 +20,12 @@ namespace Bits {
 
 		/// @brief Data bank header.
 		struct [[gnu::align(1)]] Header {
-			uint16	exists		: 1;
-			uint16	entryStart	: 10;
-			uint16	entryCount	: 5;
+			uint32	exists		: 1;
+			uint32	entryStart	: 10;
+			uint32	entryCount	: 21;
+
+			/// @brief Maximum logical amount of entries.
+			constexpr static usize const MAX_ENTRIES = (2 << 21);
 			
 			/// @brief Constructs a header from a given EEPROM location.
 			constexpr static Header fromLocation(eeprom_address const location) {
@@ -42,17 +45,20 @@ namespace Bits {
 		/// @brief Logical maximum amount of entries.
 		constexpr static uint16 const	MAX_SIZE		= MAX;
 		/// @brief Accessbible maximum amount of entries.
-		constexpr static uint16 const	MAX_CAPACITY	= (MAX_SIZE < 32 ? MAX_SIZE : 32);
+		constexpr static uint16 const	MAX_CAPACITY	= (MAX_SIZE < Header::MAX_ENTRIES ? MAX_SIZE : Header::MAX_ENTRIES);
 		/// @brief True maximum amount of entries.
 		constexpr static uint16 const	MAX_ENTRIES		= (EEPROM_SIZE - HEADER_SIZE) / ENTRY_SIZE;
 
 		/// @brief Constructs the data bank from a memory location.
 		/// @param location Memory location the data bank is stored in. By default, it is the beginning of the EEPROM (`0`).
 		DataBank(eeprom_address const location = 0): headerLocation(location) {
-			byte v;
-			EEPROM.begin();
-			if (EEPROM.read(location))
-				EEPROM.get(location, header);
+
+		}
+		
+		/// @brief initializes the data bank.
+		void begin() {
+			if (EEPROM.read(headerLocation))
+				EEPROM.get(headerLocation, header);
 		}
 
 		/// @brief Constructs the data bank from a header and a memory location.
@@ -152,6 +158,8 @@ namespace Bits {
 			updateHeader();
 		}
 
+		/// @brief Records an entry in the entry bank. If the bank is full, removes the first entry in the bank.
+		/// @param entry Entry to record.
 		void record(EntryType const& entry) {
 			if (size() >= MAX_ENTRIES)
 				fastShiftDown();

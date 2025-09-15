@@ -6,35 +6,63 @@
 #include "sensor.hpp"
 #include "ldr.hpp"
 
+/// @brief Helper classes & functions.
 namespace Bits {
+	/// @brief Serial interface parser.
+	/// @tparam T Data bank entry type.
 	template <class T>
 	struct Parser {
+		/// @brief Data bank.
 		DataBank<T>&	db;
+		/// @brief Clock.
 		Clock&			clock;
+		/// @brief Sensor.
 		Sensor&			sensor;
+		/// @brief LDR.
 		LDR&			ldr;
+		
+		/// @brief Response.
+		struct Response {
+			/// @brief Response type.
+			enum class Type: uint8 {
+				BPRT_OK,
+				BPRT_NOT_A_COMMAND,
+				BPRT_MISSING_COMMAND,
+				BPRT_INVALID_COMMAND,
+				BPRT_MISSING_ARGUMENT,
+				BPRT_INVALID_ARGUMENT,
+				BPRT_MISSING_VALUE,
+				BPRT_INVALID_VALUE
+			};
+			
+			/// @brief Response type.
+			Type	type	= Type::BPRT_OK;
+			/// @brief Response ID.
+			uint32	id		= 0;
 
-		enum class Error {
-			BPE_OK,
-			BPE_NOT_A_COMMAND,
-			BPE_MISSING_COMMAND,
-			BPE_INVALID_COMMAND,
-			BPE_MISSING_ARGUMENT,
-			BPE_INVALID_ARGUMENT,
-			BPE_MISSING_VALUE,
-			BPE_INVALID_VALUE
+			/// @brief Empty constructor.
+			constexpr Response() {}
+
+			/// @brief Other constructors.	
+			constexpr Response(Type const type):					type(type)			{}
+			constexpr Response(uint8 const id):						id(id)				{}
+			constexpr Response(Type const type, uint8 const id):	type(type), id(id)	{}
+			constexpr Response(uint8 const id, Type const type):	type(type), id(id)	{}
 		};
 
-		Error evaluate(String const& str) const {
-			if (!str.length()) return Error::BPE_MISSING_COMMAND;
+		/// @brief Evaluates a command string.
+		/// @param str Command string to evaluate.
+		/// @return Response.
+		Response evaluate(String const& str) const {
+			if (!str.length()) return {Response::Type::BPRT_MISSING_COMMAND};
 			String const command = arg(str, 0);
-			if (command[0] != '@') return Error::BPE_NOT_A_COMMAND;
+			if (command[0] != '@') return {Response::Type::BPRT_NOT_A_COMMAND};
 			if (
 				command == "@set"
 			||	command == "@s"
 			) {
 				String const param = arg(str, 1);
-				if (!param.length()) return Error::BPE_MISSING_ARGUMENT;
+				if (!param.length()) return {Response::Type::BPRT_MISSING_ARGUMENT};
 				if (
 					param == "temperature"
 				||	param == "temp"
@@ -46,9 +74,9 @@ namespace Bits {
 					if (
 						!min.length()
 					||	!max.length()
-					) return Error::BPE_MISSING_VALUE;
+					) return {Response::Type::BPRT_MISSING_VALUE};
 					auto const minVal = min.toFloat(), maxVal = max.toFloat();
-					if (maxVal <= minVal) return Error::BPE_INVALID_VALUE;
+					if (maxVal <= minVal) return {Response::Type::BPRT_INVALID_VALUE};
 					auto v = sensor.getThreshold();
 					Bits::Sensor::Unit base;
 					if (
@@ -72,6 +100,7 @@ namespace Bits {
 					v.min.temperature = sensor.toCelcius(minVal * 100, base);
 					v.max.temperature = sensor.toCelcius(maxVal * 100, base);
 					sensor.setThreshold(v);
+					return {2};
 				} else if (
 					param == "humidity"
 				||	param == "hum"
@@ -82,13 +111,14 @@ namespace Bits {
 					if (
 						!min.length()
 					||	!max.length()
-					) return Error::BPE_MISSING_VALUE;
+					) return {Response::Type::BPRT_MISSING_VALUE};
 					auto const minVal = min.toFloat(), maxVal = max.toFloat();
-					if (maxVal <= minVal) return Error::BPE_INVALID_VALUE;
+					if (maxVal <= minVal) return {Response::Type::BPRT_INVALID_VALUE};
 					auto v = sensor.getThreshold();
 					v.min.humidity = minVal * 100;
 					v.max.humidity = maxVal * 100;
 					sensor.setThreshold(v);
+					return {3};
 				} else if (
 					param == "datetime"
 				||	param == "dt"
@@ -96,9 +126,9 @@ namespace Bits {
 				) {
 					String const dt = arg(str, 2);
 					if (!dt.length())
-						return Error::BPE_MISSING_VALUE;
+						return {Response::Type::BPRT_MISSING_VALUE};
 					auto const date = DateTime(dt.c_str());
-					if (!date.isValid()) return Error::BPE_INVALID_VALUE;
+					if (!date.isValid()) return {Response::Type::BPRT_INVALID_VALUE};
 					clock.adjust(date);
 				} else if (
 					param == "timezone"
@@ -107,14 +137,15 @@ namespace Bits {
 				) {
 					String const zone = arg(str, 2);
 					if (!zone.length())
-						return Error::BPE_MISSING_VALUE;
+						return {Response::Type::BPRT_MISSING_VALUE};
 					String const hour = arg(zone, 0, ':'), minute = arg(zone, 1, ':');
 					if (
 						!hour.length()
 					||	!minute.length()
-					) return Error::BPE_MISSING_VALUE;
+					) return {Response::Type::BPRT_MISSING_VALUE};
 					int8 const z = (hour.toInt() * 4) + minute.toInt() / 15;
 					clock.setTimeZone(z);
+					return {1};
 				} else if (
 					param == "luminosity"
 				||	param == "ldr"
@@ -125,13 +156,14 @@ namespace Bits {
 					if (
 						!min.length()
 					||	!max.length()
-					) return Error::BPE_MISSING_VALUE;
+					) return {Response::Type::BPRT_MISSING_VALUE};
 					auto const minVal = min.toInt(), maxVal = max.toInt();
-					if (maxVal <= minVal) return Error::BPE_INVALID_VALUE;
+					if (maxVal <= minVal) return {Response::Type::BPRT_INVALID_VALUE};
 					auto v = ldr.getThreshold();
 					v.min = minVal;
 					v.max = maxVal;
 					ldr.setThreshold(v);
+					return {4};
 				} else if (
 					param == "rawadjustment"
 				||	param == "rawadjust"
@@ -144,25 +176,27 @@ namespace Bits {
 					if (
 						!min.length()
 					||	!max.length()
-					) return Error::BPE_MISSING_VALUE;
+					) return {Response::Type::BPRT_MISSING_VALUE};
 					auto const minVal = min.toInt(), maxVal = max.toInt();
-					if (maxVal <= minVal) return Error::BPE_INVALID_VALUE;
+					if (maxVal <= minVal) return {Response::Type::BPRT_INVALID_VALUE};
 					auto v = ldr.getAdjustment();
 					v.min = minVal;
 					v.max = maxVal;
 					ldr.setAdjustment(v);
-				} else return Error::BPE_INVALID_ARGUMENT;
+					return {5};
+				} else return {Response::Type::BPRT_INVALID_ARGUMENT};
 			} else if (
 				command == "@calibrate"
 			||	command == "@c"
 			) {
 				// TODO: calibration
+					return {5};
 			} else if (
 				command == "@view"
 			||	command == "@v"
 			) {
 				String const param = arg(str, 1);
-				if (!param.length()) return Error::BPE_MISSING_ARGUMENT;
+				if (!param.length()) return {Response::Type::BPRT_MISSING_ARGUMENT};
 				if (
 					param == "log"
 				||	param == "l"
@@ -188,9 +222,15 @@ namespace Bits {
 				||	param == "a"
 				) {
 					printLDRAdjustment();
-				} else return Error::BPE_INVALID_ARGUMENT;
-			} else return Error::BPE_INVALID_COMMAND;
-			return Error::BPE_OK;
+				} else return {Response::Type::BPRT_INVALID_ARGUMENT};
+			} else if (
+				command == "@wipeabsolutelyeverything"
+			) {
+				for (usize i = 0; i < EEPROM.length(); ++i)
+					EEPROM[i] = 0;
+				return {-1};
+			} else return {Response::Type::BPRT_INVALID_COMMAND};
+			return {};
 		}
 
 	private:
