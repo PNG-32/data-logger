@@ -13,7 +13,7 @@ namespace Bits {
 	/// @brief EEPROM data bank.
 	/// @tparam T Entry type.
 	/// @tparam MAX Possible entry limit.
-	template <class T, uint16 MAX = 16>
+	template <class T, uint16 MAX = 64>
 	struct DataBank {
 		/// @brief Entry type.
 		using EntryType = T;
@@ -25,7 +25,9 @@ namespace Bits {
 			uint32	entryCount	: 21;
 
 			/// @brief Maximum accessible amount of entries.
-			constexpr static usize const MAX_ENTRIES = (2 << 21);
+			constexpr static uint32 const MAX_ENTRIES = (2ull << 21ull);
+
+			static_assert(MAX_ENTRIES > 0);
 			
 			/// @brief Constructs a header from a given EEPROM location.
 			constexpr static Header fromLocation(eeprom_address const location) {
@@ -43,17 +45,18 @@ namespace Bits {
 		constexpr static usize const	HEADER_SIZE		= sizeof(Header);
 
 		/// @brief Logical maximum amount of entries.
-		constexpr static uint16 const	MAX_SIZE		= MAX;
+		constexpr static uint32 const	MAX_SIZE		= MAX;
 		/// @brief Accessbible maximum amount of entries.
-		constexpr static uint16 const	MAX_CAPACITY	= (MAX_SIZE < Header::MAX_ENTRIES ? MAX_SIZE : Header::MAX_ENTRIES);
+		constexpr static uint32 const	MAX_CAPACITY	= ((MAX_SIZE < Header::MAX_ENTRIES) ? MAX_SIZE : Header::MAX_ENTRIES);
 		/// @brief True maximum amount of entries.
-		constexpr static uint16 const	MAX_ENTRIES		= (EEPROM_SIZE - HEADER_SIZE) / ENTRY_SIZE;
+		constexpr static uint32 const	MAX_ENTRIES		= (EEPROM_SIZE - HEADER_SIZE) / ENTRY_SIZE;
+
+		static_assert(MAX_ENTRIES > 0);
+		static_assert(MAX_CAPACITY > 0);
 
 		/// @brief Constructs the data bank from a memory location.
 		/// @param location Memory location the data bank is stored in. By default, it is the beginning of the EEPROM (`0`).
-		DataBank(eeprom_address const location = 0): headerLocation(location) {
-
-		}
+		DataBank(eeprom_address const location = 0): headerLocation(location) {}
 		
 		/// @brief initializes the data bank.
 		void begin() {
@@ -64,7 +67,9 @@ namespace Bits {
 		/// @brief Constructs the data bank from a header and a memory location.
 		/// @param header Data bank header to use.	
 		/// @param location Memory location the data bank is stored in.
-		DataBank(Header const& header, eeprom_address const location): headerLocation(location), header(header) {
+		DataBank(Header const& header, eeprom_address const location):
+			headerLocation(location),
+			header(header) {
 			updateHeader();
 		}
 
@@ -103,6 +108,7 @@ namespace Bits {
 		void push(EntryType const& entry) {
 			if (size() < MAX_ENTRIES && size() < MAX_CAPACITY) {
 				++header.entryCount;
+				Serial.println(size());
 				set(size() - 1, entry);
 				updateHeader();
 			}
