@@ -180,7 +180,6 @@ namespace Bits {
 							sensor.readRaw(),
 							ldr.read()
 						});
-						if (db.empty()) Serial.println(":(");
 						cooldown = 15;
 					}
 					setLights(LightDisplay::BDLLD_EMERGENCY);
