@@ -1,4 +1,3 @@
-
 #ifndef BITS_LOGO_H
 #define BITS_LOGO_H
 
@@ -33,10 +32,12 @@ namespace Bits {
 			display.write("\x04\x06\x05");
 			for (usize i = 0; i < 16; ++i)
 				display.scroll(Display::TextDirection::BDTD_LEFT);
-			for (usize i = 0; i < 32; ++i) {
+			for (usize i = 0; i < 16; ++i) {
 				display.scroll(Display::TextDirection::BDTD_RIGHT);
 				Wait::seconds(0.5);
 			}
+			Wait::seconds(0.5);
+			display.clear();
 		}
 
 	private:

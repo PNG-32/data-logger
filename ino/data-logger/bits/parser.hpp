@@ -64,8 +64,7 @@ namespace Bits {
 				String const param = arg(str, 1);
 				if (!param.length()) return {Response::Type::BPRT_MISSING_ARGUMENT};
 				if (
-					param == "temperature"
-				||	param == "temp"
+					param == "temp"
 				||	param == "t"
 				) {
 					String const min	= arg(str, 2);
@@ -81,21 +80,13 @@ namespace Bits {
 					Bits::Sensor::Unit base;
 					if (
 						!unit.length()
-					||	unit == "celcius"
-					||	unit == "celsius"
-					||	unit == "centigrade"
-					||	unit == "cel"
 					||	unit == "c"
 					) base = Bits::Sensor::Unit::BSU_CELSIUS;
 					else if (
-						unit == "farenheit"
-					||	unit == "far"
-					||	unit == "f"
+						unit == "f"
 					) base = Bits::Sensor::Unit::BSU_FARENHEIT;
 					else if (
-						unit == "kelvin"
-					||	unit == "kel"
-					||	unit == "k"
+						unit == "k"
 					) base = Bits::Sensor::Unit::BSU_KELVIN;
 					v.min.temperature = sensor.toCelcius(minVal * 100, base);
 					v.max.temperature = sensor.toCelcius(maxVal * 100, base);
@@ -111,27 +102,18 @@ namespace Bits {
 					Bits::Sensor::Unit base;
 					if (
 						!unit.length()
-					||	unit == "celcius"
-					||	unit == "celsius"
-					||	unit == "centigrade"
-					||	unit == "cel"
 					||	unit == "c"
 					) base = Bits::Sensor::Unit::BSU_CELSIUS;
 					else if (
-						unit == "farenheit"
-					||	unit == "far"
-					||	unit == "f"
+						unit == "f"
 					) base = Bits::Sensor::Unit::BSU_FARENHEIT;
 					else if (
-						unit == "kelvin"
-					||	unit == "kel"
-					||	unit == "k"
+						unit == "k"
 					) base = Bits::Sensor::Unit::BSU_KELVIN;
 					else return {Response::Type::BPRT_INVALID_VALUE};
 					sensor.setUnit(base);
 				} else if (
-					param == "humidity"
-				||	param == "hum"
+					param == "hum"
 				||	param == "h"
 				) {
 					String const min = arg(str, 2);
@@ -148,8 +130,7 @@ namespace Bits {
 					sensor.setThreshold(v);
 					return {3};
 				} else if (
-					param == "datetime"
-				||	param == "dt"
+					param == "dt"
 				||	param == "d"
 				) {
 					String const dt = arg(str, 2);
@@ -159,8 +140,7 @@ namespace Bits {
 					if (!date.isValid()) return {Response::Type::BPRT_INVALID_VALUE};
 					clock.adjust(date);
 				} else if (
-					param == "timezone"
-				||	param == "zone"
+					param == "zone"
 				||	param == "z"
 				) {
 					String const zone = arg(str, 2);
@@ -175,8 +155,7 @@ namespace Bits {
 					clock.setTimeZone(z);
 					return {1};
 				} else if (
-					param == "luminosity"
-				||	param == "ldr"
+					param == "ldr"
 				||	param == "l"
 				) {
 					String const min = arg(str, 2);
@@ -193,9 +172,7 @@ namespace Bits {
 					ldr.setThreshold(v);
 					return {4};
 				} else if (
-					param == "rawadjustment"
-				||	param == "rawadjust"
-				||	param == "radj"
+					param == "radj"
 				||	param == "ra"
 				||	param == "a"
 				) {
@@ -213,13 +190,7 @@ namespace Bits {
 					ldr.setAdjustment(v);
 					return {5};
 				} else return {Response::Type::BPRT_INVALID_ARGUMENT};
-			} else if (
-				command == "@calibrate"
-			||	command == "@c"
-			) {
-				// TODO: calibration
-					return {5};
-			} else if (
+			}  else if (
 				command == "@view"
 			||	command == "@v"
 			) {
@@ -247,21 +218,18 @@ namespace Bits {
 					Serial.println("*-------------------*");
 					Serial.println("");
 				} else if (
-					param == "thresholds"
+					param == "thresh"
 				||	param == "t"
 				) {
 					printSensorThresholds();
 					printLDRThresholds();
 				} else if (
-					param == "timezone"
-				||	param == "zone"
+						param == "zone"
 				||	param == "z"
 				) {
 					printTimezone();
 				} else if (
-					param == "rawadjustment"
-				||	param == "rawadjust"
-				||	param == "radj"
+					param == "radj"
 				||	param == "ra"
 				||	param == "a"
 				) {
