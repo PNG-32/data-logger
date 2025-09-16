@@ -31,7 +31,7 @@ namespace Bits {
 			display.write("\x01\x02\x03");
 			display.setCursorPosition(11, 1);
 			display.write("\x04\x06\x05");
-			for (usize i = 0; i < 12; ++i)
+			for (usize i = 0; i < 16; ++i)
 				display.scroll(Display::TextDirection::BDTD_LEFT);
 			for (usize i = 0; i < 32; ++i) {
 				display.scroll(Display::TextDirection::BDTD_RIGHT);
