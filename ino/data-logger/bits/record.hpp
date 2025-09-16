@@ -11,7 +11,7 @@ namespace Bits {
 		BCT_CACHE_SAVE_ON_DTOR
 	};
 
-	template <class T, CacheType CACHE = CacheType::BCT_CACHE_SAVE_ON_SET, bool AUTOINIT = false>
+	template <class T, CacheType CACHE = CacheType::BCT_NO_CACHE, bool AUTOINIT = false>
 	struct Record;
 
 	template <class T, bool AUTOINIT>
@@ -19,15 +19,17 @@ namespace Bits {
 		Record(uint16 const address):
 			memaddr(address) {}
 
+		void begin() {}
+
 		T get() const {
 			T val;
 			fetch(val);
 			return val;
 		}
 
-		void fetch(T& out) const	{EEPROM.get(memaddr, out);}
+		void fetch(T& out) const	{EEPROM.get(memaddr, out);					}
 
-		void set(T const& val)		{EEPROM.put(memaddr, val);}
+		Record& set(T const& val)	{EEPROM.put(memaddr, val); return *this;	}
 
 		void save()					{}
 
@@ -88,8 +90,9 @@ namespace Bits {
 			out = val;
 		}
 
-		void set(T const& v) {
+		Record& set(T const& v) {
 			val = v;
+			 return *this;
 		}
 
 		void save() {EEPROM.put(memaddr, val);}
@@ -121,8 +124,9 @@ namespace Bits {
 			out = val;
 		}
 
-		void set(T const& v) {
+		Record& set(T const& v) {
 			val = v;
+			return *this;
 		}
 
 		void save() {EEPROM.put(memaddr, val);}

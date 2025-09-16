@@ -21,11 +21,11 @@ namespace Bits {
 		/// @brief Data bank header.
 		struct [[gnu::align(1)]] Header {
 			uint32	exists		: 1;
-			uint32	entryStart	: 10;
+			uint32	entryStart	: 12;
 			uint32	entryCount	: 21;
 
 			/// @brief Maximum accessible amount of entries.
-			constexpr static uint32 const MAX_ENTRIES = (2ull << 21ull);
+			constexpr static uint32 const MAX_ENTRIES = (2ull << 19ull);
 
 			static_assert(MAX_ENTRIES > 0);
 			
@@ -51,12 +51,15 @@ namespace Bits {
 		/// @brief True maximum amount of entries.
 		constexpr static uint32 const	MAX_ENTRIES		= (EEPROM_SIZE - HEADER_SIZE) / ENTRY_SIZE;
 
-		static_assert(MAX_ENTRIES > 0);
-		static_assert(MAX_CAPACITY > 0);
+		static_assert(MAX_ENTRIES	> 0);
+		static_assert(MAX_CAPACITY	> 0);
+		static_assert(ENTRY_SIZE	> 0);
 
 		/// @brief Constructs the data bank from a memory location.
 		/// @param location Memory location the data bank is stored in. By default, it is the beginning of the EEPROM (`0`).
-		DataBank(eeprom_address const location = 0): headerLocation(location) {}
+		DataBank(eeprom_address const location = 0):
+			headerLocation(location),
+			header(Header::fromLocation(location)) {}
 		
 		/// @brief initializes the data bank.
 		void begin() {
@@ -108,7 +111,6 @@ namespace Bits {
 		void push(EntryType const& entry) {
 			if (size() < MAX_ENTRIES && size() < MAX_CAPACITY) {
 				++header.entryCount;
-				Serial.println(size());
 				set(size() - 1, entry);
 				updateHeader();
 			}
@@ -186,7 +188,7 @@ namespace Bits {
 		/// @brief Header location.
 		eeprom_address headerLocation = 0;
 		/// @brief Bank header.	
-		Header header = Header::fromLocation(0);
+		Header header = Header::fromLocation(headerLocation);
 
 		/// @brief Updates the header in the EEPROM.
 		void updateHeader() {

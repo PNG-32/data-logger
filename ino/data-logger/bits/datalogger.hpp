@@ -90,10 +90,10 @@ namespace Bits {
 			avr_pin const	alarmPin	= 6
 		):
 			info(0),
-			clock(info.address() + sizeof(Info)),
-			sensor(sensorPin, clock.end()),
-			ldr(ldrPin, sensor.end()),
-			db(ldr.end()),
+			clock(16),
+			sensor(sensorPin, 32),
+			ldr(ldrPin, 48),
+			db(64),
 			display(),
 			led(ledPins),
 			alarm(alarmPin),
