@@ -110,7 +110,7 @@ namespace Bits {
 						return {Response::Type::BPRT_MISSING_VALUE};
 					Bits::Sensor::Unit base;
 					if (
-						unit.length()
+						!unit.length()
 					||	unit == "celcius"
 					||	unit == "celsius"
 					||	unit == "centigrade"
@@ -229,8 +229,23 @@ namespace Bits {
 					param == "log"
 				||	param == "l"
 				) {
-					for (usize i = 0; i < db.size(); ++i)
-						Serial.println(db[i].toString(sensor));
+					Serial.println("");
+					Serial.println("*-------------------*");
+					Serial.println("*-       LOG       -*");
+					Serial.println("*-------------------*");
+					Serial.println("");
+					if (db.empty())
+						Serial.println("No anomalies detected.");
+					else {
+						Serial.print("Total anomalies registered: ");
+						Serial.println(db.size());
+						Serial.println("");
+						for (usize i = 0; i < db.size(); ++i)
+							Serial.println(db[i].toString(sensor));
+					}
+					Serial.println("");
+					Serial.println("*-------------------*");
+					Serial.println("");
 				} else if (
 					param == "thresholds"
 				||	param == "t"

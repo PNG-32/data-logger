@@ -63,8 +63,8 @@ namespace Bits {
 				String log = "[";
 				log += DateTime(timestamp).timestamp() + "]: { ";
 				auto const v = sensor.toCurrentUnit(value);
-				log += "Temperature: [" + String(v.temperature) + static_cast<char>(sensor.getUnit()) + "], ";
-				log += "Humidity: [" + String(v.humidity) + "%], ";
+				log += "Temperature: [" + String(v.temperature / 100.0) + static_cast<char>(sensor.getUnit()) + "], ";
+				log += "Humidity: [" + String(v.humidity / 100.0) + "%], ";
 				log += "Luminosity: [" + String(luminosity) + "%] };";
 				return log;
 			}
@@ -171,22 +171,25 @@ namespace Bits {
 				setLights(LightDisplay::BDLLD_CONFIG_ERROR);
 				return;
 			}
-			bool const inTheDangerZone = sensor.inTheDangerZone()/* || ldr.inTheDangerZone()*/;
-			if (inTheDangerZone) {
-				if (!cooldown) {
-					db.record({
-						clock.unixNow(),
-						sensor.readRaw(),
-						ldr.read()
-					});
-					cooldown = 15000;
+			if (!screenCooldown) {
+				bool const inTheDangerZone = sensor.inTheDangerZone() || ldr.inTheDangerZone();
+				if (inTheDangerZone) {
+					if (!cooldown) {
+						db.record({
+							clock.unixNow(),
+							sensor.readRaw(),
+							ldr.read()
+						});
+						if (db.empty()) Serial.println(":(");
+						cooldown = 15;
+					}
+					setLights(LightDisplay::BDLLD_EMERGENCY);
+				} else {
+					cooldown = 1;
+					setLights(LightDisplay::BDLLD_OK);
 				}
-				setLights(LightDisplay::BDLLD_EMERGENCY);
-			} else {
-				cooldown = 100;
-				setLights(LightDisplay::BDLLD_OK);
+				if (cooldown) --cooldown;
 			}
-			if (cooldown) --cooldown;
 			updateScreen();
 			Wait::millis(1);
 		}
@@ -205,12 +208,22 @@ namespace Bits {
 			+	" "
 			+	now.timestamp(DateTime::TIMESTAMP_TIME)
 			;
-			display.setCursorPosition(0, 0);
+			display.clear();
 			display.write(ts);
 			auto const v = sensor.read();
-			writeDecimal(v.temperature, static_cast<char>(sensor.getUnit()), 0, 1);
-			writeDecimal(v.humidity, '%', 6, 1);
-			writeInt(ldr.read(), '%', 13, 1);
+			if (switchTimer) --switchTimer;
+			else {
+				switchTimer = 5;
+				showHumidity = !showHumidity;
+			}
+			if (showHumidity) {
+				display.setCursorPosition(0, 1);
+				display.write("Luminosity: ");
+				writeInt(ldr.read(), '%', 11, 1);
+			} else {
+				writeDecimal(v.temperature, static_cast<char>(sensor.getUnit()), 1, 1);
+				writeDecimal(v.humidity, '%', 8, 1);
+			}
 			tone(alarm, NOTE_C5, 100);
 		}
 
@@ -220,22 +233,18 @@ namespace Bits {
 		/// @param x X position to write in.
 		/// @param y Y position to write in.
 		/// @param maxDigits Maximum amount of digits to write.
-		void writeInt(int32 const val, char const append, uint8 const x, uint8 const y, uint8 const maxDigits = 2) {
+		void writeInt(int32 const val, char const append, uint8 const x, uint8 const y) {
+			display.setCursorPosition(x, y);
 			if (val < 0) {
 				display.write('-');
 				return writeInt(-val, append, x+1, y);
 			} else {
-				auto v = val;
-				uint8 digits = 0;
-				uint32 max = 1;
-				while (v > 9 && digits < maxDigits) {
-					v /= 10;
-					max *= 10;
-					++digits;
-				}
-				display.setCursorPosition(x + (maxDigits - digits), y);
-				display.write(static_cast<uint32>(val) % max, 10);
-				display.setCursorPosition(x + maxDigits, y);
+				display.write(' ');
+				if (val < 100)
+					display.write('0');
+				if (val < 10)
+					display.write('0');
+				display.write(val, 10);
 				display.write(append);
 			}
 		}
@@ -246,11 +255,12 @@ namespace Bits {
 		/// @param x X position to write in.
 		/// @param y Y position to write in.
 		void writeDecimal(int32 const cents, char const append, uint8 const x, uint8 const y) {
+			display.setCursorPosition(x, y);
 			if (cents < 0) {
 				display.write('-');
 				return writeDecimal(-cents, append, x+1, y);
 			} else {
-				display.setCursorPosition(x, y);
+				display.write(' ');
 				auto const
 					num = static_cast<uint32>(cents) / 100,
 					frac = static_cast<uint32>(cents) % 100
@@ -260,7 +270,7 @@ namespace Bits {
 				display.write(num, 10);
 				display.write('.');
 				display.write(frac / 10, 10);
-				display.setCursorPosition(x + 4, y);
+				display.setCursorPosition(x + 5, y);
 				display.write(append);
 			}
 		}
@@ -278,7 +288,8 @@ namespace Bits {
 			}
 		}
 
-		bool blinkenfunken = false;
+		bool showHumidity = false;
+		uint32 switchTimer = 5;
 		Record<Info>	info;
 		Clock			clock;
 		Sensor			sensor;

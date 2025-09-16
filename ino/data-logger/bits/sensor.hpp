@@ -29,7 +29,7 @@ namespace Bits {
 		};
 
 		Sensor(avr_pin const pin, eeprom_address const info):
-			pin(pin), info(info), dht(pin, DHT22) {
+			pin(pin), info(info), dht(pin, DHT11) {
 		}
 
 		void begin() {

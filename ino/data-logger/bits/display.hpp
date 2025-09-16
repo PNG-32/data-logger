@@ -92,6 +92,8 @@ namespace Bits {
 			lcd.print(v, base);
 		}
 
+		void clear() {lcd.clear();}
+
 	private:
 		LiquidCrystal_I2C lcd;
 	};

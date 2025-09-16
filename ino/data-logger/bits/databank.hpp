@@ -24,7 +24,7 @@ namespace Bits {
 			uint32	entryStart	: 10;
 			uint32	entryCount	: 21;
 
-			/// @brief Maximum logical amount of entries.
+			/// @brief Maximum accessible amount of entries.
 			constexpr static usize const MAX_ENTRIES = (2 << 21);
 			
 			/// @brief Constructs a header from a given EEPROM location.
@@ -171,10 +171,10 @@ namespace Bits {
 		inline eeprom_address	address() const	{return headerLocation;		}
 		/// @brief Returns the amount of entries in the bank.
 		/// @return Entry count.
-		inline uint16			size() const	{return header.entryCount;	}
+		inline uint32			size() const	{return header.entryCount;	}
 		/// @brief Returns whether the bank is empty.
 		/// @return Whether bank is empty.
-		inline bool				empty() const	{return size() > 0;			}
+		inline bool				empty() const	{return size() == 0;		}
 
 	private:
 		/// @brief Header location.
