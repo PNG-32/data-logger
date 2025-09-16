@@ -124,7 +124,7 @@ namespace Bits {
 
 		/// @brief Updates the data logger.
 		void update() {
-			if ((Serial.peek() != '\n' && Serial.peek() != '\0')) {
+			if (Serial.available()) {
 				auto str = Serial.readStringUntil('\n');
 				str.toLowerCase();
 				auto const result = parser.evaluate(str);
@@ -132,13 +132,26 @@ namespace Bits {
 					case ParserType::Response::Type::BPRT_OK: {
 						Serial.println("Operation completed successfully.");
 						auto i = info.get();
-						switch (result.id) {
-							case static_cast<decltype(result.id)>(-1): reset();
+						switch (result.id & 0xF) {
+							case static_cast<decltype(result.id)>(-1): Serial.println("Resetting..."); reset();
 							case 1: i.clockOK = true;		break;
 							case 2: i.temperatureOK = true; break;
 							case 3: i.humidityOK = true;	break;
 							case 4: i.luminosityOK = true;	break;
 							case 5: i.calibrationOK = true;	break;
+							case 6: {
+								Serial.println(
+									Log{
+										clock.unixNow(),
+										sensor.readRaw(),
+										ldr.read()
+									}.toString(sensor)
+								);
+							} break;
+							case 7: {
+								Serial.print("LDR: ");
+								Serial.println(ldr.readRaw());
+							}
 							default: break;
 						}
 						info = i;
@@ -153,7 +166,6 @@ namespace Bits {
 					default: Serial.println("Unknown error. Sorry :/"); break;
 				}
 				Serial.println("Command-line ready.");
-				// TODO: the rest of the parser stuff
 			}
 			if (!info.get().ok()) {
 				setLights(LightDisplay::BDLLD_CONFIG_ERROR);
@@ -180,6 +192,7 @@ namespace Bits {
 		}
 
 	private:
+		/// @brief Updates the data logger's display.
 		void updateScreen() {
 			if (screenCooldown) {
 				--screenCooldown;
@@ -197,9 +210,16 @@ namespace Bits {
 			auto const v = sensor.read();
 			writeDecimal(v.temperature, static_cast<char>(sensor.getUnit()), 0, 1);
 			writeDecimal(v.humidity, '%', 6, 1);
-			writeInt(ldr.read(), '%', 12, 1);
+			writeInt(ldr.read(), '%', 13, 1);
+			tone(alarm, NOTE_C5, 100);
 		}
 
+		/// @brief Writes an integer to the display.
+		/// @param val Value to write.
+		/// @param append Character to append.
+		/// @param x X position to write in.
+		/// @param y Y position to write in.
+		/// @param maxDigits Maximum amount of digits to write.
 		void writeInt(int32 const val, char const append, uint8 const x, uint8 const y, uint8 const maxDigits = 2) {
 			if (val < 0) {
 				display.write('-');
@@ -220,6 +240,11 @@ namespace Bits {
 			}
 		}
 		
+		/// @brief Writes a decimal value to the display.
+		/// @param cents Value (in cents) to write.
+		/// @param append Character to append.
+		/// @param x X position to write in.
+		/// @param y Y position to write in.
 		void writeDecimal(int32 const cents, char const append, uint8 const x, uint8 const y) {
 			if (cents < 0) {
 				display.write('-');
@@ -240,11 +265,12 @@ namespace Bits {
 			}
 		}
 
+		/// @brief Sets the light indicator state.
+		/// @param lights State to set to.
 		void setLights(LightDisplay const lights) {
 			digitalWrite(led.red,		LOW);
 			digitalWrite(led.yellow,	LOW);
 			digitalWrite(led.green,		LOW);
-			tone(alarm, );
 			switch (lights) {
 				case (LightDisplay::BDLLD_OK):				digitalWrite(led.green,		HIGH);	break;
 				case (LightDisplay::BDLLD_CONFIG_ERROR):	digitalWrite(led.yellow,	HIGH);	break;
@@ -252,6 +278,7 @@ namespace Bits {
 			}
 		}
 
+		bool blinkenfunken = false;
 		Record<Info>	info;
 		Clock			clock;
 		Sensor			sensor;

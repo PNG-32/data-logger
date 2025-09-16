@@ -26,12 +26,15 @@ namespace Bits {
 			pin(pin), info(info) {
 		}
 
-		void begin() {pinMode(pin, INPUT);}
+		void begin() {
+			pinMode(pin, INPUT);
+			info.begin();
+		}
 
 		int16 read() const {
 			auto const v	= readRaw();
 			auto const adj	= info.get().adjustment;
-			return constrain(map(v, adj.min, adj.max, 0, 100), 0, 100);
+			return constrain(100 - map(v, adj.min, adj.max, 0, 100), 0, 100);
 		}
 
 		int16 readRaw() const {

@@ -24,7 +24,10 @@ namespace Bits {
 			info(info) {}
 
 		/// @brief Initializes the clock.	
-		void begin() {rtc.begin();}
+		void begin() {
+			rtc.begin();
+			info.begin();
+		}
 
 		/// @brief Returns the current time as a UNIX timestamp.
 		/// @return Current time as UNIX timestamp.

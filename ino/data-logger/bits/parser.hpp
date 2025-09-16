@@ -80,7 +80,7 @@ namespace Bits {
 					auto v = sensor.getThreshold();
 					Bits::Sensor::Unit base;
 					if (
-						unit.length()
+						!unit.length()
 					||	unit == "celcius"
 					||	unit == "celsius"
 					||	unit == "centigrade"
@@ -101,6 +101,34 @@ namespace Bits {
 					v.max.temperature = sensor.toCelcius(maxVal * 100, base);
 					sensor.setThreshold(v);
 					return {2};
+				} else if (
+					param == "unit"
+				||	param == "u"
+				) {
+					String const unit	= arg(str, 2);
+					if (!unit.length())
+						return {Response::Type::BPRT_MISSING_VALUE};
+					Bits::Sensor::Unit base;
+					if (
+						unit.length()
+					||	unit == "celcius"
+					||	unit == "celsius"
+					||	unit == "centigrade"
+					||	unit == "cel"
+					||	unit == "c"
+					) base = Bits::Sensor::Unit::BSU_CELSIUS;
+					else if (
+						unit == "farenheit"
+					||	unit == "far"
+					||	unit == "f"
+					) base = Bits::Sensor::Unit::BSU_FARENHEIT;
+					else if (
+						unit == "kelvin"
+					||	unit == "kel"
+					||	unit == "k"
+					) base = Bits::Sensor::Unit::BSU_KELVIN;
+					else return {Response::Type::BPRT_INVALID_VALUE};
+					sensor.setUnit(base);
 				} else if (
 					param == "humidity"
 				||	param == "hum"
@@ -211,6 +239,7 @@ namespace Bits {
 					printLDRThresholds();
 				} else if (
 					param == "timezone"
+				||	param == "zone"
 				||	param == "z"
 				) {
 					printTimezone();
@@ -224,12 +253,33 @@ namespace Bits {
 					printLDRAdjustment();
 				} else return {Response::Type::BPRT_INVALID_ARGUMENT};
 			} else if (
-				command == "@wipeabsolutelyeverything"
+				command == "@wipe"
+			||	command == "@w"
 			) {
-				for (usize i = 0; i < EEPROM.length(); ++i)
-					EEPROM[i] = 0;
-				return {-1};
+				String const param = arg(str, 1);
+				if (!param.length()) return {Response::Type::BPRT_MISSING_ARGUMENT};
+				if (param == "absolutelyeverything") {
+					for (usize i = 0; i < EEPROM.length(); ++i)
+						EEPROM[i] = 0;
+					return {-1};
+				} else if (param == "log")
+					db.clear();
+				else return {Response::Type::BPRT_INVALID_ARGUMENT};
 			} else if (command == "@reset") return {-1};
+			else if (
+				command == "@read"
+			||	command == "@r"
+			) {
+				String const param = arg(str, 1);
+				if (
+					!param.length()
+				||	param == "sensors"
+				) return {6};
+				else if (
+					param == "rawldr"
+				) return {7};
+				else return {Response::Type::BPRT_INVALID_ARGUMENT};
+			}
 			else return {Response::Type::BPRT_INVALID_COMMAND};
 			return {};
 		}
@@ -247,12 +297,12 @@ namespace Bits {
 			Serial.print("    MIN: ");
 			Serial.println(min.temperature / 100.0);
 			Serial.print("    MAX: ");
-			Serial.println(min.temperature / 100.0);
+			Serial.println(max.temperature / 100.0);
 			Serial.println("Humidity (%):");
 			Serial.print("    MIN: ");
 			Serial.println(min.humidity / 100.0);
 			Serial.print("    MAX: ");
-			Serial.println(min.humidity / 100.0);
+			Serial.println(max.humidity / 100.0);
 		}
 
 		void printLDRThresholds() const {

@@ -32,7 +32,10 @@ namespace Bits {
 			pin(pin), info(info), dht(pin, DHT22) {
 		}
 
-		void begin() {dht.begin();}
+		void begin() {
+			dht.begin();
+			info.begin();
+		}
 
 		Value read() const {
 			return toCurrentUnit(readRaw());
@@ -49,8 +52,8 @@ namespace Bits {
 			switch (info.get().unit) {
 				default:
 				case Unit::BSU_CELSIUS: break;
-				case Unit::BSU_FARENHEIT:	v.temperature = (v.temperature * 1.8 + 32.0) * 100;	break;
-				case Unit::BSU_KELVIN:		v.temperature += 27315;								break;
+				case Unit::BSU_FARENHEIT:	v.temperature = (v.temperature * 1.8 + 3200);	break;
+				case Unit::BSU_KELVIN:		v.temperature += 27315;							break;
 			}
 			return v;
 		}
@@ -59,7 +62,7 @@ namespace Bits {
 			switch (unit) {
 				default:
 				case Unit::BSU_CELSIUS:		return value;
-				case Unit::BSU_FARENHEIT:	return (value - 32.0) * (5.0/9.0);
+				case Unit::BSU_FARENHEIT:	return (value - 3200) * (5.0/9.0);
 				case Unit::BSU_KELVIN:		return value - 27315;
 			}
 		}
