@@ -10,6 +10,7 @@
 #include "parser.hpp"
 #include "core.hpp"
 #include "pitch.hpp"
+#include "logo.hpp"
 
 /// @brief Helper classes & functions.
 namespace Bits {
@@ -109,6 +110,7 @@ namespace Bits {
 			display.begin();
 			db.begin();
 			info.begin();
+			logo.begin();
 			if (!clock.adjusted())
 				clock.adjust({F(__DATE__), F(__TIME__)});
 			pinMode(led.red,	OUTPUT);
@@ -119,6 +121,7 @@ namespace Bits {
 			display.setDisplay(Display::State::BDS_OFF);
 			Wait::seconds(1);
 			display.setDisplay(Display::State::BDS_ON);
+			logo.animate();
 			Serial.println("Command-line ready.");
 		}
 
@@ -299,6 +302,7 @@ namespace Bits {
 		uint16			screenCooldown	= 0;
 		LEDPins			led;
 		ParserType		parser;
+		Logo			logo{display};
 		avr_pin			alarm;
 	};
 }

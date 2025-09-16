@@ -11,5 +11,6 @@
 #include "display.hpp"
 #include "parser.hpp"
 #include "datalogger.hpp"
+#include "logo.hpp"
 
 #endif
