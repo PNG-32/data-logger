@@ -10,13 +10,13 @@
 
 ```
 @set, s
-	[dt, D] \<ISO-Formatted Date\>
-	[radj, ra, a] \<min\> \<max\>
-	[ldr, l] \<min\> \<max\>
-	[hum, h] \<min\> \<max\>
-	[temp, t] \<min\> \<max\> \<{c}, f, k\>
-	[zone, z] \<hour\>:\<minute\>
-	[unit, u] \<\c, f, k\>
+	[dt, d] <ISO-Formatted Date>
+	[radj, ra, a] <min> <max>
+	[ldr, l] <min> <max>
+	[hum, h] <min> <max>
+	[temp, t] <min> <max> <{c}, f, k>
+	[zone, z] <hour>:<minute>
+	[unit, u] <c, f, k>
 
 @read, r
 	{sensors}
