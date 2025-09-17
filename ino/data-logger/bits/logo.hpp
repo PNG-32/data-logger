@@ -34,10 +34,15 @@ namespace Bits {
 				display.scroll(Display::TextDirection::BDTD_LEFT);
 			for (usize i = 0; i < 16; ++i) {
 				display.scroll(Display::TextDirection::BDTD_RIGHT);
-				Wait::seconds(0.5);
+				Wait::seconds(0.15);
 			}
-			Wait::seconds(0.5);
+			Wait::seconds(2.9);
+			for (usize i = 0; i < 16; ++i) {
+				display.scroll(Display::TextDirection::BDTD_RIGHT);
+				Wait::seconds(0.15);
+			}
 			display.clear();
+			Wait::seconds(0.9);
 		}
 
 	private:

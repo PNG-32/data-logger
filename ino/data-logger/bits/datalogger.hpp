@@ -97,11 +97,11 @@ namespace Bits {
 			db(64),
 			display(),
 			led(ledPins),
-			alarm(alarmPin),
-			parser{db, clock, sensor, ldr} {}
+			alarm(alarmPin) {}
 
 		/// @brief Initializes the data logger.
 		void begin() {
+			Logo logo{display};
 			Serial.begin(9600);
 			EEPROM.begin();
 			sensor.begin();
@@ -110,7 +110,7 @@ namespace Bits {
 			display.begin();
 			db.begin();
 			info.begin();
-			//logo.begin();
+			logo.begin();
 			if (!clock.adjusted())
 				clock.adjust({F(__DATE__), F(__TIME__)});
 			pinMode(led.red,	OUTPUT);
@@ -121,7 +121,7 @@ namespace Bits {
 			display.setDisplay(Display::State::BDS_OFF);
 			Wait::seconds(1);
 			display.setDisplay(Display::State::BDS_ON);
-			//logo.animate();
+			logo.animate();
 			Serial.println("Command-line ready.");
 		}
 
@@ -130,6 +130,7 @@ namespace Bits {
 			if (Serial.available()) {
 				auto str = Serial.readStringUntil('\n');
 				str.toLowerCase();
+				ParserType parser{db, clock, sensor, ldr};
 				auto const result = parser.evaluate(str);
 				switch (result.type) {
 					case ParserType::Response::Type::BPRT_OK: {
@@ -185,8 +186,10 @@ namespace Bits {
 						});
 						cooldown = 15;
 					}
+					tone(alarm, NOTE_C6, 500);
 					setLights(LightDisplay::BDLLD_EMERGENCY);
 				} else {
+					tone(alarm, NOTE_C5, 100);
 					cooldown = 1;
 					setLights(LightDisplay::BDLLD_OK);
 				}
@@ -226,7 +229,6 @@ namespace Bits {
 				writeDecimal(v.temperature, static_cast<char>(sensor.getUnit()), 1, 1);
 				writeDecimal(v.humidity, '%', 8, 1);
 			}
-			tone(alarm, NOTE_C5, 100);
 		}
 
 		/// @brief Writes an integer to the display.
@@ -298,11 +300,9 @@ namespace Bits {
 		LDR				ldr;
 		DataBank<Log>	db;
 		Display			display;
-		uint16			cooldown		= 0;
+		uint8			cooldown		= 0;
 		uint16			screenCooldown	= 0;
 		LEDPins			led;
-		ParserType		parser;
-		//Logo			logo{display};
 		avr_pin			alarm;
 	};
 }
